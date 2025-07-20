@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido Mesa {{ mesa_id }} - Sistema Pizzaria{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" x-data="pedidoApp()">
+    <!-- Header -->
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-utensils text-pizza-green mr-3"></i>Mesa {{ mesa_id }}
+            </h1>
+            <p class="text-gray-600">Adicionar itens ao pedido</p>
+        </div>
+        <div class="text-right">
+            <p class="text-lg font-semibold text-gray-700">Total do Pedido:</p>
+            <p class="text-2xl font-bold text-pizza-green">R$ {{ "%.2f"|format(pedido[1]) }}</p>
+        </div>
+    </div>
+
+    <!-- Current Order Items -->
+    {% if itens %}
+    <div class="bg-white rounded-lg shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-list mr-2 text-pizza-green"></i>Itens do Pedido
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                {% for item in itens %}
+                <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">
+                            {{ item[1] }}
+                            {% if item[6] %} + {{ item[6] }}{% endif %}
+                        </h4>
+                        <p class="text-sm text-gray-600">
+                            Tamanho: {{ item[2] }} | Quantidade: {{ item[3] }}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-pizza-green">R$ {{ "%.2f"|format(item[5]) }}</p>
+                        <p class="text-sm text-gray-600">R$ {{ "%.2f"|format(item[4]) }} cada</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Add New Item Form -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-plus mr-2 text-pizza-green"></i>Adicionar Item
+            </h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" action="{{ url_for('adicionar_item_pedido', mesa_id=mesa_id) }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Product Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-pizza-slice mr-2 text-pizza-green"></i>Produto
+                        </label>
+                        <select name="produto_id" x-model="selectedProduct" @change="updateProduct()" 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green" required>
+                            <option value="">Selecione um produto</option>
+                            {% for produto in produtos %}
+                            <option value="{{ produto[0] }}" 
+                                    data-nome="{{ produto[1] }}"
+                                    data-categoria="{{ produto[3] }}"
+                                    data-preco-p="{{ produto[4] or 0 }}"
+                                    data-preco-m="{{ produto[5] or 0 }}"
+                                    data-preco-g="{{ produto[6] or 0 }}"
+                                    data-preco-familia="{{ produto[7] or 0 }}">
+                                {{ produto[1] }} - {{ produto[3] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div x-show="selectedProduct">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-expand-arrows-alt mr-2 text-pizza-green"></i>Tamanho
+                        </label>
+                        <select name="tamanho" x-model="selectedSize" @change="updatePrice()" 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green" required>
+                            <option value="">Selecione o tamanho</option>
+                            <template x-for="size in availableSizes" :key="size.name">
+                                <option :value="size.name" x-text="size.name + ' - R$ ' + size.price.toFixed(2)"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Second Flavor (for pizzas) -->
+                    <div x-show="selectedProduct && currentCategory === 'Pizzas'">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-pizza-slice mr-2 text-pizza-green"></i>Segundo Sabor (Opcional)
+                        </label>
+                        <select name="sabor2_id" 
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                            <option value="">Nenhum (pizza inteira)</option>
+                            {% for produto in produtos %}
+                                {% if produto[3] == 'Pizzas' %}
+                                <option value="{{ produto[0] }}">{{ produto[1] }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Para pizza meio a meio, será cobrado o valor da mais cara</p>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-sort-numeric-up mr-2 text-pizza-green"></i>Quantidade
+                        </label>
+                        <input type="number" name="quantidade" min="1" value="1" 
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green" required>
+                    </div>
+
+                    <!-- Observations -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment mr-2 text-pizza-green"></i>Observações
+                        </label>
+                        <textarea name="observacoes" rows="3" 
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                                  placeholder="Observações especiais do cliente..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Price Preview -->
+                <div x-show="currentPrice > 0" class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <span class="text-green-800 font-medium">Preço unitário:</span>
+                        <span class="text-green-900 font-bold text-lg" x-text="'R$ ' + currentPrice.toFixed(2)"></span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-6 flex space-x-4">
+                    <button type="submit" 
+                            class="bg-pizza-green hover:bg-pizza-dark-green text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-plus mr-2"></i>Adicionar ao Pedido
+                    </button>
+                    <a href="{{ url_for('mesas') }}" 
+                       class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>Voltar às Mesas
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function pedidoApp() {
+    return {
+        selectedProduct: '',
+        selectedSize: '',
+        currentCategory: '',
+        currentPrice: 0,
+        availableSizes: [],
+        
+        updateProduct() {
+            if (!this.selectedProduct) {
+                this.availableSizes = [];
+                this.currentCategory = '';
+                this.currentPrice = 0;
+                return;
+            }
+            
+            const option = document.querySelector(`option[value="${this.selectedProduct}"]`);
+            this.currentCategory = option.dataset.categoria;
+            
+            this.availableSizes = [];
+            if (parseFloat(option.dataset.precoP) > 0) {
+                this.availableSizes.push({name: 'P', price: parseFloat(option.dataset.precoP)});
+            }
+            if (parseFloat(option.dataset.precoM) > 0) {
+                this.availableSizes.push({name: 'M', price: parseFloat(option.dataset.precoM)});
+            }
+            if (parseFloat(option.dataset.precoG) > 0) {
+                this.availableSizes.push({name: 'G', price: parseFloat(option.dataset.precoG)});
+            }
+            if (parseFloat(option.dataset.precoFamilia) > 0) {
+                this.availableSizes.push({name: 'Família', price: parseFloat(option.dataset.precoFamilia)});
+            }
+            
+            this.selectedSize = '';
+            this.currentPrice = 0;
+        },
+        
+        updatePrice() {
+            if (!this.selectedSize) {
+                this.currentPrice = 0;
+                return;
+            }
+            
+            const size = this.availableSizes.find(s => s.name === this.selectedSize);
+            this.currentPrice = size ? size.price : 0;
+        }
+    }
+}
+</script>
+{% endblock %}

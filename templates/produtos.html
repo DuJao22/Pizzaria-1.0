@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Produtos - Sistema Pizzaria{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" x-data="{ showModal: false }">
+    <!-- Header -->
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-pizza-slice text-pizza-green mr-3"></i>Gerenciar Produtos
+            </h1>
+            <p class="text-gray-600">Administração do cardápio da pizzaria</p>
+        </div>
+        {% if session.user_tipo == 'admin' %}
+        <button @click="showModal = true" 
+                class="bg-pizza-green hover:bg-pizza-dark-green text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i>Novo Produto
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for produto in produtos %}
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover-lift">
+            <!-- Product Image Placeholder -->
+            <div class="h-48 bg-gradient-to-br from-pizza-green to-pizza-light-green flex items-center justify-center">
+                <i class="fas fa-pizza-slice text-white text-4xl"></i>
+            </div>
+            
+            <!-- Product Info -->
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-semibold text-gray-900">{{ produto[1] }}</h3>
+                    {% if produto[8] %}
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Ativo</span>
+                    {% else %}
+                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Inativo</span>
+                    {% endif %}
+                </div>
+                
+                <p class="text-gray-600 text-sm mb-3">{{ produto[2] or 'Sem descrição' }}</p>
+                
+                <div class="mb-3">
+                    <span class="inline-block bg-pizza-green text-white px-2 py-1 rounded text-xs">
+                        {{ produto[3] }}
+                    </span>
+                </div>
+                
+                <!-- Prices -->
+                <div class="space-y-1">
+                    {% if produto[4] and produto[4] > 0 %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Pequena (P):</span>
+                        <span class="font-semibold text-pizza-green">R$ {{ "%.2f"|format(produto[4]) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if produto[5] and produto[5] > 0 %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Média (M):</span>
+                        <span class="font-semibold text-pizza-green">R$ {{ "%.2f"|format(produto[5]) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if produto[6] and produto[6] > 0 %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Grande (G):</span>
+                        <span class="font-semibold text-pizza-green">R$ {{ "%.2f"|format(produto[6]) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if produto[7] and produto[7] > 0 %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Família:</span>
+                        <span class="font-semibold text-pizza-green">R$ {{ "%.2f"|format(produto[7]) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if session.user_tipo == 'admin' %}
+                <div class="mt-4 flex space-x-2">
+                    <a href="{{ url_for('editar_produto', produto_id=produto[0]) }}" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm transition-colors text-center">
+                        <i class="fas fa-edit mr-1"></i>Editar
+                    </a>
+                    <a href="{{ url_for('toggle_produto', produto_id=produto[0]) }}" class="flex-1 {% if produto[8] %}bg-red-500 hover:bg-red-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white px-3 py-2 rounded text-sm transition-colors text-center">
+                        {% if produto[8] %}
+                            <i class="fas fa-ban mr-1"></i>Desativar
+                        {% else %}
+                            <i class="fas fa-check mr-1"></i>Ativar
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add Product Modal -->
+    <div x-show="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-plus mr-2 text-pizza-green"></i>Adicionar Novo Produto
+                    </h2>
+                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('adicionar_produto') }}" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Info -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-2 text-pizza-green"></i>Nome do Produto
+                        </label>
+                        <input type="text" name="nome" required
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                               placeholder="Ex: Pizza Margherita">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-align-left mr-2 text-pizza-green"></i>Descrição
+                        </label>
+                        <textarea name="descricao" rows="3"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                                  placeholder="Descrição detalhada do produto..."></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-list mr-2 text-pizza-green"></i>Categoria
+                        </label>
+                        <select name="categoria_id" required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                            <option value="">Selecione uma categoria</option>
+                            {% for categoria in categorias %}
+                            <option value="{{ categoria[0] }}">{{ categoria[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Prices -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-pizza-green"></i>Preço P
+                        </label>
+                        <input type="number" name="preco_p" step="0.01" min="0"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-pizza-green"></i>Preço M
+                        </label>
+                        <input type="number" name="preco_m" step="0.01" min="0"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-pizza-green"></i>Preço G
+                        </label>
+                        <input type="number" name="preco_g" step="0.01" min="0"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-dollar-sign mr-2 text-pizza-green"></i>Preço Família
+                        </label>
+                        <input type="number" name="preco_familia" step="0.01" min="0"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                               placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex space-x-4">
+                    <button type="submit" 
+                            class="flex-1 bg-pizza-green hover:bg-pizza-dark-green text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>Salvar Produto
+                    </button>
+                    <button type="button" @click="showModal = false"
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

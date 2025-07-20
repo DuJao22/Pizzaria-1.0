@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema Pizzaria{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-tachometer-alt text-pizza-green mr-3"></i>Dashboard
+        </h1>
+        <p class="text-gray-600">Visão geral do sistema de pizzaria</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Pedidos Hoje -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover-lift">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-blue-500 rounded-full p-3">
+                            <i class="fas fa-shopping-cart text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Pedidos Hoje</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ pedidos_hoje }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendas Hoje -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover-lift">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-green-500 rounded-full p-3">
+                            <i class="fas fa-dollar-sign text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Vendas Hoje</dt>
+                            <dd class="text-2xl font-bold text-gray-900">R$ {{ "%.2f"|format(vendas_hoje) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mesas Ocupadas -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover-lift">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-orange-500 rounded-full p-3">
+                            <i class="fas fa-table text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Mesas Ocupadas</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ mesas_ocupadas }}/10</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Produtos -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover-lift">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-purple-500 rounded-full p-3">
+                            <i class="fas fa-pizza-slice text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Produtos Ativos</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ total_produtos }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white shadow-lg rounded-lg p-6 hover-lift">
+            <div class="text-center">
+                <div class="bg-pizza-green rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                    <i class="fas fa-table text-white text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Gerenciar Mesas</h3>
+                <p class="text-gray-600 text-sm mb-4">Controle de mesas do salão</p>
+                <a href="{{ url_for('mesas') }}" class="bg-pizza-green hover:bg-pizza-dark-green text-white px-6 py-2 rounded-lg transition-colors">
+                    Ir para Mesas
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg p-6 hover-lift">
+            <div class="text-center">
+                <div class="bg-blue-500 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                    <i class="fas fa-shopping-bag text-white text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Pedido Retirada</h3>
+                <p class="text-gray-600 text-sm mb-4">Criar pedido para retirada</p>
+                <a href="{{ url_for('retirada') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors">
+                    Novo Pedido
+                </a>
+            </div>
+        </div>
+
+        {% if session.user_tipo == 'admin' %}
+        <div class="bg-white shadow-lg rounded-lg p-6 hover-lift">
+            <div class="text-center">
+                <div class="bg-purple-500 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                    <i class="fas fa-pizza-slice text-white text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Produtos</h3>
+                <p class="text-gray-600 text-sm mb-4">Gerenciar cardápio</p>
+                <a href="{{ url_for('produtos') }}" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors">
+                    Gerenciar
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Welcome Message -->
+    <div class="bg-gradient-pizza rounded-lg shadow-lg p-6 text-white">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-pizza-slice text-4xl text-green-200"></i>
+            </div>
+            <div class="ml-6">
+                <h2 class="text-2xl font-bold">Bem-vindo ao PizzaSystem!</h2>
+                <p class="text-green-200 mt-2">
+                    Sistema completo de gerenciamento para pizzarias. 
+                    {% if session.user_tipo == 'admin' %}
+                    Como administrador, você tem acesso total ao sistema.
+                    {% else %}
+                    Você está logado como atendente.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

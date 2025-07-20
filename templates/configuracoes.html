@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - {{ config.nome_sistema }}{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">
+            <i class="fas fa-cog text-pizza-green mr-3"></i>Configurações do Sistema
+        </h1>
+        <p class="text-gray-400">Personalize as configurações da pizzaria</p>
+    </div>
+
+    <!-- Configuration Form -->
+    <div class="bg-gray-800 rounded-lg shadow-lg border border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-semibold text-white">
+                <i class="fas fa-store mr-2 text-pizza-green"></i>Dados da Pizzaria
+            </h2>
+        </div>
+        
+        <form method="POST" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-tag mr-2 text-pizza-green"></i>Nome do Sistema
+                    </label>
+                    <input type="text" name="nome_sistema" value="{{ config.nome_sistema }}" required
+                           class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                           placeholder="Ex: Pizzaria do João">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-phone mr-2 text-pizza-green"></i>WhatsApp (com código do país)
+                    </label>
+                    <input type="text" name="telefone_whatsapp" value="{{ config.telefone_whatsapp }}" required
+                           class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                           placeholder="Ex: 5511999999999">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-map-marker-alt mr-2 text-pizza-green"></i>Endereço
+                    </label>
+                    <textarea name="endereco" rows="3"
+                              class="w-full border border-gray-600 rounded-lg px-4 py-2 bg-gray-700 text-white focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                              placeholder="Endereço completo da pizzaria...">{{ config.get('endereco', '') }}</textarea>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button type="submit" 
+                        class="bg-pizza-green hover:bg-pizza-dark-green text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-save mr-2"></i>Salvar Configurações
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- System Info -->
+    <div class="mt-8 bg-gray-800 rounded-lg shadow-lg border border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-semibold text-white">
+                <i class="fas fa-info-circle mr-2 text-pizza-green"></i>Informações do Sistema
+            </h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="bg-blue-600 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                        <i class="fas fa-code text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Versão</h3>
+                    <p class="text-gray-400">v1.0.0</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-green-600 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                        <i class="fas fa-database text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Banco de Dados</h3>
+                    <p class="text-gray-400">SQLite3</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-purple-600 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                        <i class="fas fa-heart text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Desenvolvido por</h3>
+                    <p class="text-gray-400">João Layon</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Preview -->
+    <div class="mt-8 bg-gray-800 rounded-lg shadow-lg border border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-semibold text-white">
+                <i class="fas fa-palette mr-2 text-pizza-green"></i>Tema do Sistema
+            </h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-gray-900 rounded mx-auto mb-2 border border-gray-600"></div>
+                    <p class="text-xs text-gray-400">Fundo Principal</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-gray-800 rounded mx-auto mb-2 border border-gray-600"></div>
+                    <p class="text-xs text-gray-400">Cards</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-pizza-green rounded mx-auto mb-2"></div>
+                    <p class="text-xs text-gray-400">Destaque</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-white rounded mx-auto mb-2"></div>
+                    <p class="text-xs text-gray-400">Texto</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

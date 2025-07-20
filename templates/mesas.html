@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Mesas - Sistema Pizzaria{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-table text-pizza-green mr-3"></i>Controle de Mesas
+        </h1>
+        <p class="text-gray-600">Gerencie as mesas do salão</p>
+    </div>
+
+    <!-- Mesas Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {% for mesa in mesas %}
+        <div class="bg-white rounded-lg shadow-lg p-6 text-center hover-lift 
+                    {% if mesa[1] == 'livre' %}border-2 border-green-300{% else %}border-2 border-red-300{% endif %}">
+            <div class="mb-4">
+                <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold
+                            {% if mesa[1] == 'livre' %}bg-green-100 text-green-600{% else %}bg-red-100 text-red-600{% endif %}">
+                    {{ mesa[0] }}
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Mesa {{ mesa[0] }}</h3>
+            
+            {% if mesa[1] == 'livre' %}
+                <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                    <i class="fas fa-check mr-1"></i>Livre
+                </span>
+                <div>
+                    <a href="{{ url_for('abrir_mesa', mesa_id=mesa[0]) }}" 
+                       class="bg-pizza-green hover:bg-pizza-dark-green text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-play mr-2"></i>Abrir Mesa
+                    </a>
+                </div>
+            {% else %}
+                <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                    <i class="fas fa-users mr-1"></i>Ocupada
+                </span>
+                
+                {% if mesa[2] > 0 %}
+                <p class="text-sm text-gray-600 mb-4">
+                    Total: <strong class="text-pizza-green">R$ {{ "%.2f"|format(mesa[2]) }}</strong>
+                </p>
+                {% endif %}
+                
+                <div class="space-y-2">
+                    {% if mesa[3] > 0 %}
+                    <a href="{{ url_for('pedido_mesa', mesa_id=mesa[0]) }}" 
+                       class="block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Adicionar Itens
+                    </a>
+                    <a href="{{ url_for('fechar_mesa', mesa_id=mesa[0]) }}" 
+                       class="block bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="fas fa-receipt mr-2"></i>Fechar Mesa
+                    </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Legenda</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-green-300 rounded mr-3"></div>
+                <span class="text-sm text-gray-700">Mesa Livre - Disponível para uso</span>
+            </div>
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-red-300 rounded mr-3"></div>
+                <span class="text-sm text-gray-700">Mesa Ocupada - Cliente presente</span>
+            </div>
+        </div>
+        
+        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div class="flex items-start">
+                <i class="fas fa-info-circle text-yellow-600 mr-3 mt-0.5"></i>
+                <div class="text-sm text-yellow-800">
+                    <strong>Instruções:</strong>
+                    <ul class="mt-2 list-disc list-inside space-y-1">
+                        <li>Clique em "Abrir Mesa" para iniciar um atendimento</li>
+                        <li>Use "Adicionar Itens" para incluir produtos no pedido</li>
+                        <li>Finalize com "Fechar Mesa" quando o cliente terminar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

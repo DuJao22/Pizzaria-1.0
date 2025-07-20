@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Pedido Retirada - Sistema Pizzaria{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in" x-data="retiradaApp()">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-shopping-bag text-pizza-green mr-3"></i>Pedido para Retirada
+        </h1>
+        <p class="text-gray-600">Criar novo pedido para retirada no balcão</p>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="bg-white rounded-lg shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-user mr-2 text-pizza-green"></i>Dados do Cliente
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-pizza-green"></i>Nome Completo
+                    </label>
+                    <input type="text" x-model="clienteNome" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                           placeholder="Digite o nome do cliente" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-2 text-pizza-green"></i>Telefone
+                    </label>
+                    <input type="tel" x-model="clienteTelefone" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                           placeholder="(11) 99999-9999" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Selection -->
+    <div class="bg-white rounded-lg shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-pizza-slice mr-2 text-pizza-green"></i>Selecionar Produtos
+            </h2>
+        </div>
+        <div class="p-6">
+            <!-- Add Item Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Produto</label>
+                    <select x-model="selectedProduct" @change="updateProduct()" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                        <option value="">Selecione</option>
+                        {% for produto in produtos %}
+                        <option value="{{ produto[0] }}" 
+                                data-nome="{{ produto[1] }}"
+                                data-categoria="{{ produto[3] }}"
+                                data-preco-p="{{ produto[4] or 0 }}"
+                                data-preco-m="{{ produto[5] or 0 }}"
+                                data-preco-g="{{ produto[6] or 0 }}"
+                                data-preco-familia="{{ produto[7] or 0 }}">
+                            {{ produto[1] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div x-show="selectedProduct">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tamanho</label>
+                    <select x-model="selectedSize" @change="updatePrice()" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                        <option value="">Tamanho</option>
+                        <template x-for="size in availableSizes" :key="size.name">
+                            <option :value="size.name" x-text="size.name + ' - R$ ' + size.price.toFixed(2)"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <div x-show="selectedProduct">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantidade</label>
+                    <input type="number" x-model="quantidade" min="1" value="1" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                </div>
+
+                <div x-show="selectedProduct" class="flex items-end">
+                    <button @click="addItem()" 
+                            class="w-full bg-pizza-green hover:bg-pizza-dark-green text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Adicionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Second Flavor for Pizzas -->
+            <div x-show="selectedProduct && currentCategory === 'Pizzas'" class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-pizza-slice mr-2 text-pizza-green"></i>Segundo Sabor (Pizza Meio a Meio)
+                </label>
+                <select x-model="sabor2" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green">
+                    <option value="">Nenhum (pizza inteira)</option>
+                    {% for produto in produtos %}
+                        {% if produto[3] == 'Pizzas' %}
+                        <option value="{{ produto[0] }}">{{ produto[1] }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Para pizza meio a meio, será cobrado o valor da mais cara</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div x-show="pedidoItens.length > 0" class="bg-white rounded-lg shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-list mr-2 text-pizza-green"></i>Itens do Pedido
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <template x-for="(item, index) in pedidoItens" :key="index">
+                    <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900" x-text="item.nome"></h4>
+                            <p class="text-sm text-gray-600">
+                                <span x-text="'Tamanho: ' + item.tamanho"></span>
+                                <span x-text="' | Quantidade: ' + item.quantidade"></span>
+                                <span x-show="item.sabor2" x-text="' | + ' + item.sabor2Nome"></span>
+                            </p>
+                        </div>
+                        <div class="text-right mr-4">
+                            <p class="font-semibold text-pizza-green" x-text="'R$ ' + item.subtotal.toFixed(2)"></p>
+                            <p class="text-sm text-gray-600" x-text="'R$ ' + item.preco.toFixed(2) + ' cada'"></p>
+                        </div>
+                        <button @click="removeItem(index)" 
+                                class="text-red-500 hover:text-red-700 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- Total -->
+            <div class="border-t border-gray-200 pt-6 mt-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-2xl font-bold text-gray-900">Total:</span>
+                    <span class="text-3xl font-bold text-pizza-green" x-text="'R$ ' + totalPedido.toFixed(2)"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Observations -->
+    <div class="bg-white rounded-lg shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-comment mr-2 text-pizza-green"></i>Observações
+            </h2>
+        </div>
+        <div class="p-6">
+            <textarea x-model="observacoes" rows="3" 
+                      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pizza-green focus:border-pizza-green"
+                      placeholder="Observações especiais do pedido..."></textarea>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-4">
+        <button @click="finalizarPedido()" 
+                :disabled="!canFinalize()"
+                :class="canFinalize() ? 'bg-pizza-green hover:bg-pizza-dark-green' : 'bg-gray-400 cursor-not-allowed'"
+                class="flex-1 text-white px-6 py-4 rounded-lg font-medium text-lg transition-colors flex items-center justify-center">
+            <i class="fas fa-check mr-3"></i>Finalizar Pedido
+        </button>
+        
+        <a href="{{ url_for('dashboard') }}" 
+           class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-4 rounded-lg font-medium text-lg transition-colors flex items-center justify-center">
+            <i class="fas fa-arrow-left mr-3"></i>Cancelar
+        </a>
+    </div>
+</div>
+
+<script>
+function retiradaApp() {
+    return {
+        clienteNome: '',
+        clienteTelefone: '',
+        selectedProduct: '',
+        selectedSize: '',
+        quantidade: 1,
+        sabor2: '',
+        observacoes: '',
+        currentCategory: '',
+        currentPrice: 0,
+        availableSizes: [],
+        pedidoItens: [],
+        
+        get totalPedido() {
+            return this.pedidoItens.reduce((total, item) => total + item.subtotal, 0);
+        },
+        
+        canFinalize() {
+            return this.clienteNome && this.clienteTelefone && this.pedidoItens.length > 0;
+        },
+        
+        updateProduct() {
+            if (!this.selectedProduct) {
+                this.availableSizes = [];
+                this.currentCategory = '';
+                this.currentPrice = 0;
+                return;
+            }
+            
+            const option = document.querySelector(`option[value="${this.selectedProduct}"]`);
+            this.currentCategory = option.dataset.categoria;
+            
+            this.availableSizes = [];
+            if (parseFloat(option.dataset.precoP) > 0) {
+                this.availableSizes.push({name: 'P', price: parseFloat(option.dataset.precoP)});
+            }
+            if (parseFloat(option.dataset.precoM) > 0) {
+                this.availableSizes.push({name: 'M', price: parseFloat(option.dataset.precoM)});
+            }
+            if (parseFloat(option.dataset.precoG) > 0) {
+                this.availableSizes.push({name: 'G', price: parseFloat(option.dataset.precoG)});
+            }
+            if (parseFloat(option.dataset.precoFamilia) > 0) {
+                this.availableSizes.push({name: 'Família', price: parseFloat(option.dataset.precoFamilia)});
+            }
+            
+            this.selectedSize = '';
+            this.currentPrice = 0;
+        },
+        
+        updatePrice() {
+            if (!this.selectedSize) {
+                this.currentPrice = 0;
+                return;
+            }
+            
+            const size = this.availableSizes.find(s => s.name === this.selectedSize);
+            this.currentPrice = size ? size.price : 0;
+        },
+        
+        addItem() {
+            if (!this.selectedProduct || !this.selectedSize || this.quantidade < 1) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            const option = document.querySelector(`option[value="${this.selectedProduct}"]`);
+            const produtoNome = option.dataset.nome;
+            
+            let sabor2Nome = '';
+            if (this.sabor2) {
+                const sabor2Option = document.querySelector(`option[value="${this.sabor2}"]`);
+                sabor2Nome = sabor2Option.textContent;
+            }
+            
+            const item = {
+                produto_id: this.selectedProduct,
+                nome: produtoNome,
+                tamanho: this.selectedSize,
+                quantidade: this.quantidade,
+                preco: this.currentPrice,
+                subtotal: this.currentPrice * this.quantidade,
+                sabor2: this.sabor2,
+                sabor2Nome: sabor2Nome
+            };
+            
+            this.pedidoItens.push(item);
+            
+            // Reset form
+            this.selectedProduct = '';
+            this.selectedSize = '';
+            this.quantidade = 1;
+            this.sabor2 = '';
+            this.availableSizes = [];
+            this.currentPrice = 0;
+        },
+        
+        removeItem(index) {
+            this.pedidoItens.splice(index, 1);
+        },
+        
+        finalizarPedido() {
+            if (!this.canFinalize()) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+            
+            // Criar mensagem WhatsApp
+            let mensagem = '🍕 *NOVO PEDIDO - RETIRADA*\n\n';
+            mensagem += `👤 Cliente: ${this.clienteNome}\n`;
+            mensagem += `📞 Telefone: ${this.clienteTelefone}\n\n`;
+            mensagem += '*ITENS:*\n';
+            
+            this.pedidoItens.forEach((item, index) => {
+                mensagem += `${index + 1}. ${item.nome}`;
+                if (item.sabor2Nome) {
+                    mensagem += ` + ${item.sabor2Nome}`;
+                }
+                mensagem += ` (${item.tamanho}) - Qty: ${item.quantidade} - R$ ${item.subtotal.toFixed(2)}\n`;
+            });
+            
+            if (this.observacoes) {
+                mensagem += `\n📝 Observações: ${this.observacoes}\n`;
+            }
+            
+            mensagem += `\n💰 *TOTAL: R$ ${this.totalPedido.toFixed(2)}*\n`;
+            mensagem += `⏰ ${new Date().toLocaleString('pt-BR')}`;
+            
+            // Abrir WhatsApp
+            const whatsappUrl = `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Reset form
+            this.clienteNome = '';
+            this.clienteTelefone = '';
+            this.pedidoItens = [];
+            this.observacoes = '';
+            
+            alert('Pedido enviado para o WhatsApp! O cliente será notificado quando estiver pronto.');
+        }
+    }
+}
+</script>
+{% endblock %}
